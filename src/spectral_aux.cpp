@@ -46,14 +46,12 @@ int main()
 
 
 
-    int* result = getNearestNeighbours(points, 7, 2, 3, 4);
+    int** result = mNearestNeighbours(points, 7, 2, 3);
 
-    for(int i = 0; i < 3; i++)
+    for(int j = 0; j < 7; j++)
     {
-    	printf("%d nearest index : %d\n", i, result[i]);
+	    printf("[%d] nearest : %d %d %d\n", j, result[j][0], result[j][1], result[j][2]);
     }
-
-    cout << "Hello, World!";
 
     return 0;
 }
@@ -64,10 +62,12 @@ int main()
 int** mNearestNeighbours(double** points, int n, int d, int k)
 {
 	int** rc = new int*[n];
-	for(int i = 0; i < n; i++)
-    	rc[i] = new int[k];
 
-
+    for(int i = 0; i < n; i++)
+    {
+    	int* result = getNearestNeighbours(points, n, d, k, i);
+    	rc[i] = result;
+    }
 
 
 	return rc;
