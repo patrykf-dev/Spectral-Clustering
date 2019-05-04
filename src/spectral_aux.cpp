@@ -2,6 +2,7 @@
 #include <queue>
 #include <algorithm>
 #include <utility>
+#include <list>
 #include <Rcpp.h>
 using namespace Rcpp;
 using namespace std;
@@ -77,15 +78,15 @@ double EuclideanDistance(NumericVector point1, NumericVector point2)
 // 4.2 Adjacency matrix ////////////////////////////////
 ////////////////////////////////////////////////////////
 bool VectorContains(IntegerVector vector, int element);
+int VectorSum(IntegerVector vector);
 
 
 class AdjacencyMatrixGraph
 {
 	int n;
 	IntegerMatrix adjacencyMatrix;
-
 public:
-	void ConnectedComponents()
+	list<int> ConnectedComponentsRepresentatives()
 	{
 		bool *visited = new bool[n];
 		for (int v = 0; v < n; v++)
@@ -93,22 +94,21 @@ public:
 			visited[v] = false;
 		}
 
+		list<int> rc = list<int>();
 		for (int v = 0; v < n; v++)
 		{
 			if (!visited[v])
 			{
-				// Print all reachable vertices from v
+				rc.push_back(v);
 				DFSRun(v, visited);
-				Rcout << endl << endl;
 			}
 		}
+		return rc;
 	}
 
 	void DFSRun(int v, bool visited[])
 	{
 		visited[v] = true;
-		Rcout << v << " ";
-		// Recur for all the vertices adjacent to this vertex
 		for (int i = 0; i < n; i++)
 		{
 			if (!visited[i] && adjacencyMatrix(i, v) == 1)
@@ -123,10 +123,6 @@ public:
 		this->adjacencyMatrix = adjacencyMatrix;
 	}
 };
-
-
-
-
 
 
 // [[Rcpp::export]]
@@ -158,15 +154,59 @@ IntegerMatrix Mnn_graph(IntegerMatrix neighbours)
 			rc(j, i) = adjacent;
 		}
 	}
+	return rc;
+}
 
-	AdjacencyMatrixGraph graph = AdjacencyMatrixGraph(rc);
-	graph.ConnectedComponents();
+// [[Rcpp::export]]
+IntegerMatrix Mnn_graph_D_matrix(IntegerMatrix graphMatrix)
+{
+	int n = graphMatrix.nrow();
+	IntegerMatrix rc = IntegerMatrix(n, n);
+
+	for(int i = 0; i < n; i++)
+	{
+		rc(i, i) = VectorSum(graphMatrix.row(i));
+	}
 
 	return rc;
+}
+
+
+// [[Rcpp::export]]
+IntegerMatrix Mnn_connect_graph(IntegerMatrix graphMatrix)
+{
+	AdjacencyMatrixGraph graph = AdjacencyMatrixGraph(graphMatrix);
+	list<int> verticesToConnect = graph.ConnectedComponentsRepresentatives();
+
+	Rcout << "Connecting vertices: ";
+	list<int>::iterator it = verticesToConnect.begin();
+	int oneVertex = *it;
+	it++;
+
+	while (it != verticesToConnect.end())
+	{
+		int vertex = *it;
+		Rcout << "(" <<  oneVertex << ", "<< vertex << ") ";
+		graphMatrix(oneVertex, vertex) = 1;
+		graphMatrix(vertex, oneVertex) = 1;
+		it++;
+	}
+	Rcout << endl;
+	return graphMatrix;
 }
 
 
 bool VectorContains(IntegerVector vector, int element)
 {
 	return (find(vector.begin(), vector.end(), element) != vector.end());
+}
+
+int VectorSum(IntegerVector vector)
+{
+	int sum = 0;
+	for(IntegerVector::iterator it = vector.begin(); it != vector.end(); it++)
+	{
+		sum += *it;
+	}
+	return sum;
 }

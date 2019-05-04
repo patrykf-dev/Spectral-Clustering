@@ -1,7 +1,6 @@
 setwd("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/Spectral-Clustering/src")
 Rcpp::sourceCpp("spectral_aux.cpp", verbose=TRUE, rebuild=TRUE)
 
-
 # example 1
 X1 <- matrix(c(0, 10, 1, 10, 3, 10, 6, 10, 14, 2, 16, 2, 19, 2), ncol=2, byrow=TRUE)
 S1 <- Mnn(X1, 3)
@@ -28,16 +27,41 @@ stopifnot(all(S2 == S2_expected))
 
 G2 <- Mnn_graph(S2)
 G2_expected <- matrix(c(
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0), ncol=7, byrow=TRUE)
+    0, 1, 1, 0, 0, 0, 0, 0,
+    1, 0, 1, 0, 0, 0, 0, 0,
+    1, 1, 0, 1, 1, 0, 0, 0,
+    0, 0, 1, 0, 1, 0, 0, 0,
+    0, 0, 1, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 1, 1,
+    0, 0, 0, 0, 0, 1, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 0), ncol=8, byrow=TRUE)
 stopifnot(all(G2 == G2_expected))
 
+D2 <- Mnn_graph_D_matrix(G2)
+D2_expected <- matrix(c(
+    2, 0, 0, 0, 0, 0, 0, 0,
+    0, 2, 0, 0, 0, 0, 0, 0,
+    0, 0, 4, 0, 0, 0, 0, 0,
+    0, 0, 0, 2, 0, 0, 0, 0,
+    0, 0, 0, 0, 2, 0, 0, 0,
+    0, 0, 0, 0, 0, 2, 0, 0,
+    0, 0, 0, 0, 0, 0, 2, 0,
+    0, 0, 0, 0, 0, 0, 0, 2), ncol=8, byrow=TRUE)
+stopifnot(all(D2 == D2_expected))
 
+G2 <- Mnn_connect_graph(G2)
+G2_expected <- matrix(c(
+    0, 1, 1, 0, 0, 1, 0, 0,
+    1, 0, 1, 0, 0, 0, 0, 0,
+    1, 1, 0, 1, 1, 0, 0, 0,
+    0, 0, 1, 0, 1, 0, 0, 0,
+    0, 0, 1, 1, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 1, 1,
+    0, 0, 0, 0, 0, 1, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 0), ncol=8, byrow=TRUE)
+stopifnot(all(G2 == G2_expected))
+
+L2 <- D2 - G2
+E2 <- eigen(L2)$vectors
 
 
