@@ -1,5 +1,6 @@
 #include <cmath>
 #include <queue>
+#include <algorithm>
 #include <utility>
 #include <Rcpp.h>
 using namespace Rcpp;
@@ -9,17 +10,15 @@ using namespace std;
 ////////////////////////////////////////////////////////
 // 4.1 M-nearest neighbours ////////////////////////////
 ////////////////////////////////////////////////////////
-
+double EuclideanDistance(NumericVector point1, NumericVector point2);
+IntegerVector GetNearestNeighbours(NumericMatrix points, int k, int pointIndex);
 class CompareDist
 {
 public:
-    bool operator()(pair<int,double> n1, pair<int,double> n2) {
-        return n1.second > n2.second;
-    }
+	bool operator()(pair<int, double> n1, pair<int, double> n2) {
+		return n1.second > n2.second;
+	}
 };
-
-double EuclideanDistance(NumericVector point1, NumericVector point2);
-IntegerVector GetNearestNeighbours(NumericMatrix points, int k, int pointIndex);
 
 
 // [[Rcpp::export]]
@@ -28,12 +27,12 @@ IntegerMatrix Mnn(NumericMatrix points, int k)
 	int n = points.nrow();
 	IntegerMatrix rc(n, k);
 
-    for(int i = 0; i < n; i++)
-    {
-    	IntegerVector result = GetNearestNeighbours(points, k, i);
-        //Rcout << "Value for " << i << " is " << result(0) << " " << result(1) << " " << result(2) << std::endl;
-    	rc.row(i) = result;
-    }
+	for (int i = 0; i < n; i++)
+	{
+		IntegerVector result = GetNearestNeighbours(points, k, i);
+		//Rcout << "Value for " << i << " is " << result(0) << " " << result(1) << " " << result(2) << endl;
+		rc.row(i) = result;
+	}
 	return rc;
 }
 
@@ -43,18 +42,18 @@ IntegerVector GetNearestNeighbours(NumericMatrix points, int k, int pointIndex)
 	int n = points.nrow();
 	IntegerVector rc(k);
 
-	priority_queue<pair<int, double>, vector<pair<int,int> >, CompareDist> queue;
+	priority_queue<pair<int, double>, vector<pair<int, int> >, CompareDist> queue;
 
-	for(int i = 0; i < n; i++) 
+	for (int i = 0; i < n; i++)
 	{
-		if(i == pointIndex)
+		if (i == pointIndex)
 			continue;
 
 		double distance = EuclideanDistance(points.row(i), points.row(pointIndex));
 		queue.push(make_pair(i, distance));
 	}
 
-	for(int i = 0; i < k ; i++)
+	for (int i = 0; i < k ; i++)
 	{
 		rc(i) = queue.top().first;
 		queue.pop();
@@ -67,7 +66,7 @@ double EuclideanDistance(NumericVector point1, NumericVector point2)
 {
 	int d = point1.size();
 	double result = 0;
-	for(int i = 0; i < d; i++)
+	for (int i = 0; i < d; i++)
 		result += (point1(i) - point2(i)) * (point1(i) - point2(i));
 	return sqrt(result);
 }
@@ -77,6 +76,97 @@ double EuclideanDistance(NumericVector point1, NumericVector point2)
 ////////////////////////////////////////////////////////
 // 4.2 Adjacency matrix ////////////////////////////////
 ////////////////////////////////////////////////////////
+bool VectorContains(IntegerVector vector, int element);
 
-// TODO...
 
+class AdjacencyMatrixGraph
+{
+	int n;
+	IntegerMatrix adjacencyMatrix;
+
+public:
+	void ConnectedComponents()
+	{
+		bool *visited = new bool[n];
+		for (int v = 0; v < n; v++)
+		{
+			visited[v] = false;
+		}
+
+		for (int v = 0; v < n; v++)
+		{
+			if (!visited[v])
+			{
+				// Print all reachable vertices from v
+				DFSRun(v, visited);
+				Rcout << endl << endl;
+			}
+		}
+	}
+
+	void DFSRun(int v, bool visited[])
+	{
+		visited[v] = true;
+		Rcout << v << " ";
+		// Recur for all the vertices adjacent to this vertex
+		for (int i = 0; i < n; i++)
+		{
+			if (!visited[i] && adjacencyMatrix(i, v) == 1)
+				DFSRun(i, visited);
+		}
+	}
+
+	AdjacencyMatrixGraph(IntegerMatrix adjacencyMatrix)
+	{
+		int n = adjacencyMatrix.nrow();
+		this->n = n;
+		this->adjacencyMatrix = adjacencyMatrix;
+	}
+};
+
+
+
+
+
+
+// [[Rcpp::export]]
+IntegerMatrix Mnn_graph(IntegerMatrix neighbours)
+{
+	int n = neighbours.nrow();
+	IntegerMatrix rc = IntegerMatrix(n, n);
+
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = i; j < n; j++)
+		{
+			if (i == j)
+			{
+				rc(i, j) = 0;
+				continue;
+			}
+
+			int adjacent = 0;
+			if (VectorContains(neighbours.row(i), j))
+				adjacent = 1;
+			else if (VectorContains(neighbours.row(j), i))
+				adjacent = 1;
+			else
+				adjacent = 0;
+			//Rcout << "Adjacent flag for [" << i << ", " << j << "] is " << adjacent << endl;
+
+			rc(i, j) = adjacent;
+			rc(j, i) = adjacent;
+		}
+	}
+
+	AdjacencyMatrixGraph graph = AdjacencyMatrixGraph(rc);
+	graph.ConnectedComponents();
+
+	return rc;
+}
+
+
+bool VectorContains(IntegerVector vector, int element)
+{
+	return (find(vector.begin(), vector.end(), element) != vector.end());
+}
