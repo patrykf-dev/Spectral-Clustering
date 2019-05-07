@@ -27,9 +27,11 @@ Spectral_clustering_plot<- function(X, k, M) {
     result <- Spectral_clustering_raw(as.matrix(X), k, M);
     colors <- factor(result$cluster);
     if (ncol(X) == 2) {
-        ggplot(X, aes(X[[1]], X[[2]])) + geom_point(aes(col=colors));
+        ggplot(X, aes(X[[1]], X[[2]])) + geom_point(aes(col=colors))+ 
+            scale_fill_brewer(palette = "Set1");
     } else {
-        ggplot(X, aes(X[[1]], X[[2]], X[[3]])) + geom_point(aes(col=colors));
+        ggplot(X, aes(X[[1]], X[[2]], X[[3]])) + geom_point(aes(col=colors))+ 
+            scale_fill_brewer(palette = "Set1");
     }
 }
 
@@ -50,7 +52,7 @@ Compare_methods <- function(fileName) {
     labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
     
     # Process algorithms
-    myResult <- Spectral_clustering(data, k, 10, FALSE);
+    myResult <- Spectral_clustering(data, k, 4, FALSE);
     hCompleteResult <- cutree(hclust(dist(data), method = "complete"), k);
     
     # Find similarity indices 
