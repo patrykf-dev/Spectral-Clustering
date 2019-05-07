@@ -52,23 +52,27 @@ Compare_methods <- function(fileName) {
     labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
     
     # Process algorithms
-    myResult <- Spectral_clustering(data, k, 4, FALSE);
+    myResult4 <- Spectral_clustering(data, k, 4, FALSE);
+    myResult20 <- Spectral_clustering(data, k, 20, FALSE);
+    myResult200 <- Spectral_clustering(data, k, 200, FALSE);
     hCompleteResult <- cutree(hclust(dist(data), method = "complete"), k);
+    hSingleResult <- cutree(hclust(dist(data), method = "single"), k);
+    hAverageResult <- cutree(hclust(dist(data), method = "average"), k);
     
-    # Find similarity indices 
-    myComparedFM <- FM_index(myResult, labels)[1];
-    myComparedAR <- adjustedRandIndex(myResult, labels);
-    
-    results <- data.frame("Method" = "Custom", "Index" = "FM", "Value" = myComparedFM, stringsAsFactors = FALSE);
-    results[nrow(results) + 1,] = list("Custom", "AR", myComparedAR);
+    # Find similarity indices
+    dt <- data.frame("Method" = "Custom M=4", "Index" = "FM", "Value" = FM_index(myResult4, labels)[1], stringsAsFactors = FALSE);
+    dt[nrow(dt) + 1,] = list("Custom M=4", "AR", adjustedRandIndex(myResult4, labels));
 
-    hCompleteFM <- FM_index(hCompleteResult, labels)[1];
-    hCompleteAR <- adjustedRandIndex(hCompleteResult, labels);
+    dt[nrow(dt) + 1,] = list("Custom M=20", "FM", FM_index(myResult20, labels)[1]);
+    dt[nrow(dt) + 1,] = list("Custom M=20", "AR", adjustedRandIndex(myResult20, labels));
     
-    results[nrow(results) + 1,] = list("hclust Complete", "FM", hCompleteFM);
-    results[nrow(results) + 1,] = list("hclust Complete", "AR", hCompleteAR);
+    dt[nrow(dt) + 1,] = list("Custom M=200", "FM", FM_index(myResult200, labels)[1]);
+    dt[nrow(dt) + 1,] = list("Custom M=200", "AR", adjustedRandIndex(myResult200, labels));
     
-    return(results);
+    dt[nrow(dt) + 1,] = list("hclust Complete", "FM", FM_index(hCompleteResult, labels)[1]);
+    dt[nrow(dt) + 1,] = list("hclust Complete", "AR", adjustedRandIndex(hCompleteResult, labels));
+    
+    return(dt);
 }
 
 compared <- Compare_methods("atom")
