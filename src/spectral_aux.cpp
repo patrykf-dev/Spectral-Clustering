@@ -178,7 +178,6 @@ IntegerMatrix Mnn_connect_graph(IntegerMatrix graphMatrix)
 	AdjacencyMatrixGraph graph = AdjacencyMatrixGraph(graphMatrix);
 	list<int> verticesToConnect = graph.ConnectedComponentsRepresentatives();
 
-	Rcout << "Connecting vertices: ";
 	list<int>::iterator it = verticesToConnect.begin();
 	int oneVertex = *it;
 	it++;
