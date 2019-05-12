@@ -4,15 +4,22 @@ output:
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Load all needed libraries
 library(dendextend)
 library(mclust)
 library(ggplot2)
 library(gridExtra)
+set.seed(100)
 ```
 
 # Wstęp
+Analiza skupień jest zadaniem eksploracji i etykietowania danych, które polega na dzieleniu zbioru danych na grupy (skupienia) tak, by elementy w jednej grupie były do siebie jak najbardziej podobne, a jednocześnie jak najbardziej odmienne od elementów z pozostałych grup. Jako że analiza skupień znalazła swoje zastosowanie w wielu dziedzinach nauki, dostępna jest mnogość bibliotek, które implementują ten algorytm. Zajmiemy się poniższymi:
 
+* algorytmy hierarchiczne `hlcust` dostępne w bazowym R,
+* algorytmem Genie,
+* algorytmem `specc` z pakietu `kernlab`,
+* autorską implementacją analizy skupień.
+
+Interesujące może się wydawać porównanie dostępnych implementacji i wybranie tej najlepszej. Czy jest to jednak wybór oczywisty? Czy wydajność i dokładność algorytmów zależy od zbioru danych? W odpowiedzi na te pytania pomogą wskaźniki FM i AR, które jednoznacznie porównają wyniki zwracane przez algorytmy dla zbiorów benchmarkowych z wzorcowymi. Zarówno **skorygowany indeks Randa**, jak i **indeks Fowlkesa–Mallowsa** pozwalają ocenić zgodność dwóch podziałów zbioru na rozłączne podzbiory. Ponadto, AR uwzględnia prawdopodobieństwo, że dwa algorytmy grupowania zachowując się losowo, równocześnie rozdzielą parę lub dołączą do jednej grupy.
 
 # Indeksy FM i AR dla bazowych algorytmów hierarchicznych
 
