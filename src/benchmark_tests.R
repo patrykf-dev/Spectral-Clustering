@@ -40,6 +40,13 @@ Compare_hclust_methods <- function(fileName) {
     return(dt);
 }
 
+
+benchmarkSets <- c("cross", "dense", "lsun", "spiral", "wingnut", "zigzag")
+hclustResult <- lapply(benchmarkSets, Compare_hclust_methods)
+df <- Reduce(rbind, hclustResult)
+
+
+
 compared <- Compare_hclust_methods("wingnut")
 
 ggplot(compared, aes(factor(Method), Value, fill = Index)) + 
@@ -69,7 +76,7 @@ Benchmark_kernlab_method <- function(fileName) {
     return(dt)
 }
 
-benchmarkSets <- c("atom", "line", "hepta", "ring", "smile", "tetra", "z1", "x1")
+benchmarkSets <- c("cross", "dense", "lsun", "spiral", "wingnut", "zigzag")
 kernlabResult <- lapply(benchmarkSets, Benchmark_kernlab_method)
  
 
