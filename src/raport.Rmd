@@ -10,16 +10,40 @@ library(mclust)
 library(ggplot2)
 ```
 
-## Wstęp
+# Wstęp
 
 
-## Indeksy FM i AR dla bazowych algorytmów hierarchicznych
+# Indeksy FM i AR dla bazowych algorytmów hierarchicznych
 
 
-## Indeksy FM i AR dla algorytmu Genie
+# Indeksy FM i AR dla algorytmu Genie
 
 
-## Najlepsze M w algorytmie najbliższych sąsiadów
+# Indeksy FM i AR dla funkcji specc w pakiecie kernlab
+Pakiet `kernlab`, dostępny na [CRAN](https://www.rdocumentation.org/packages/kernlab/versions/0.9-27), udostępnia funkcję `specc`, która dokonuje analizy skupień na zadanym zbiorze danych. Zgodnie ze specyfikacją, algorytm osadza przetwarzane punkty w przestrzeni k największych wartości własnych znormlizowanej macierzy podobieństwa.
+
+> Spectral clustering works by embedding the data points of the partitioning problem into the subspace of the k largest eigenvectors of a normalized affinity/kernel matrix.
+
+Poniżej zestawienie wyników działania algorytmu dla przykładowych zbiorów benchmarkowych.
+
+```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
+    # Wartosci hardcodowane ze wzgledu na dlugi czas przetwarzania
+    kernlabResults <- structure(list(Set.name = c("cross", "cross", "dense", "dense", 
+        "lsun", "lsun", "spiral", "spiral", "wingnut", "wingnut", "zigzag", 
+        "zigzag"), Index = c("FM", "AR", "FM", "AR", "FM", "AR", "FM", 
+        "AR", "FM", "AR", "FM", "AR"), Value = c(0.465340930201732, 0.105087003417032, 
+        0.694993439169809, 0.2603194214965435, 1, 1, 1, 1, 1, 1, 1, 
+        1)), class = "data.frame")
+
+    ggplot(kernlabResults, aes(factor(Set.name), Value, fill = Index)) + 
+        geom_bar(stat="identity", position = "dodge") +  
+        scale_fill_brewer(palette = "Set1") + 
+        geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25, size=2) + xlab("Zbiór") + ylab("Wartość wskaźnika")
+```
+
+Jak widać, `kernlab:specc` osiąga pełną zgodność z wzorcowymi skupieniami dla niektórych zbiorów (po głębszej analize - zadowalające wyniki dla 26/44 zbiorów). Minusem opisywanego algorytmu jest jego szybkość działania - średnia szybkość wykonania analizy to 7 sekund.
+
+# Indeksy FM i AR dla własnej implementacji algorytmu 
 
 
-## Wnioski
+# Wnioski
