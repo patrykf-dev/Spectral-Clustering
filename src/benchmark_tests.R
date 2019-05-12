@@ -1,4 +1,4 @@
-
+source("spectral.R")
 Compare_methods <- function(fileName) {
     k <- 3;
     setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
