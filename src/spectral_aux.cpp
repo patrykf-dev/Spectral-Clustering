@@ -190,7 +190,6 @@ IntegerMatrix Mnn_connect_graph(IntegerMatrix graphMatrix)
 		graphMatrix(vertex, oneVertex) = 1;
 		it++;
 	}
-	Rcout << endl;
 	return graphMatrix;
 }
 
