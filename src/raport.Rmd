@@ -1,0 +1,25 @@
+---
+output:
+  pdf_document: default
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Load all needed libraries
+library(dendextend)
+library(mclust)
+library(ggplot2)
+```
+
+## Wstęp
+
+
+## Indeksy FM i AR dla bazowych algorytmów hierarchicznych
+
+
+## Indeksy FM i AR dla algorytmu Genie
+
+
+## Najlepsze M w algorytmie najbliższych sąsiadów
+
+
+## Wnioski

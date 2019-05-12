@@ -31,3 +31,6 @@
 *.out
 *.app
 src/.Rhistory
+
+# Pdf files
+*.pdf
