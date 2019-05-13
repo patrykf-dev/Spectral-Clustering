@@ -72,7 +72,7 @@ Benchmark_method <- function(testMethod, testFolder, testSubFolder = "") {
         
         print(paste0("PROCESSING FILE: ", i, " / ", length(dataFiles), " -> ", (i * 100 / length(dataFiles)), "%"))
         
-        results <- testMethod(data, labels, testSubFolder);
+        results <- testMethod(data, labels);
         if(testSubFolder == ""){
             path <- paste0("results/", toString(testFolder), "/", fileName, ".csv");
         } else {
@@ -176,3 +176,23 @@ Compare_methods <- function(fileName) {
     dt[nrow(dt) + 1,] = list("Custom M=200", "AR", adjustedRandIndex(myResult200, labels));
     return(dt);
 }
+
+
+
+
+# testing genie...
+Compare_genie_method <- function(fileName) {
+    setsPath <- "D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe";
+    setwd(setsPath);
+    labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
+    
+    genieResult <- read.table(paste0(setsPath, "/results/genie/", fileName, ".csv"));
+    
+    dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(genieResult, labels)[1], stringsAsFactors = FALSE);
+    dt[nrow(dt) + 1,] = list(fileName, "AR", adjustedRandIndex(genieResult, labels));
+    
+    return(dt)
+}
+
+benchmarkSets <- c("cross", "dense", "lsun", "spiral", "wingnut", "zigzag")
+genieResults <- lapply(benchmarkSets, Compare_genie_method)
