@@ -51,10 +51,10 @@ Compare_method <- function(fileName, methodName) {
         setwd(setsPath);
         labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
         
-        genieResult <- read.table(paste0(setsPath, "/results/", methodName, "/", fileName, ".csv"));
+        result <- read.table(paste0(setsPath, "/results/", methodName, "/", fileName, ".csv"));
         
-        dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(genieResult, labels)[1], stringsAsFactors = FALSE);
-        dt[nrow(dt) + 1,] = list(fileName, "AR", abs(adjustedRandIndex(genieResult, labels)));
+        dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(result, labels)[1], stringsAsFactors = FALSE);
+        dt[nrow(dt) + 1,] = list(fileName, "AR", abs(adjustedRandIndex(result, labels)));
         
         return(dt)
 }
@@ -68,7 +68,13 @@ plotComparedMethod <- function(df, title) {
         scale_fill_brewer(palette = "Set1") + 
         theme(axis.ticks.x=element_blank(), axis.text.x=element_blank()) +
         xlab("Zbiór") + ylab("Wartość wskaźnika") +
-        ggtitle(title) + labs(subtitle = subtitle)
+        ggtitle(title) + labs(subtitle=subtitle)
+}
+
+drawComparisonPlot <- function(resultsFolder, plotTitle) {
+    results <- lapply(fileNames, Compare_method, methodName=resultsFolder);
+    df <- Reduce(rbind, results);
+    plotComparedMethod(df, plotTitle);
 }
 
 setwd(setsPath);
@@ -79,11 +85,11 @@ fileNames <- list.files()[grepl(pattern = ".data.gz", list.files())];
 ```
 
 # Wstęp
-Analiza skupień jest zadaniem eksploracji i etykietowania danych, które polega na dzieleniu zbioru danych na grupy (skupienia) tak, by elementy w jednej grupie były do siebie jak najbardziej podobne, a jednocześnie jak najbardziej odmienne od elementów z pozostałych grup. Jako że analiza skupień znalazła swoje zastosowanie w wielu dziedzinach nauki, dostępna jest mnogość bibliotek, które implementują ten algorytm. Zajmiemy się poniższymi:
+Analiza skupień jest zadaniem eksploracji i etykietowania danych, które polega na dzieleniu zbioru danych na grupy (skupienia) tak, by elementy w jednej grupie były do siebie jak najbardziej podobne, a jednocześnie jak najbardziej odmienne od elementów z pozostałych grup. Jako że analiza skupień znalazła swoje zastosowanie w wielu dziedzinach nauki, dostępna jest mnogość bibliotek, które implementują ten algorytm. Zajmiemy się poniższymi implementacjami:
 
 * algorytmy hierarchiczne `hlcust` dostępne w bazowym R,
-* algorytmem Genie,
-* algorytmem `specc` z pakietu `kernlab`,
+* algorytmem genie z pakietu Genie,
+* algorytmem hierarchicznym z pakietu `protoclust`,
 * autorską implementacją analizy skupień.
 
 Interesujące może się wydawać porównanie dostępnych implementacji i wybranie tej najlepszej. Czy jest to jednak wybór oczywisty? Czy wydajność i dokładność algorytmów zależy od zbioru danych? W odpowiedzi na te pytania pomogą wskaźniki FM i AR, które jednoznacznie porównają wyniki zwracane przez algorytmy dla zbiorów benchmarkowych z wzorcowymi. Zarówno **skorygowany indeks Randa**, jak i **indeks Fowlkesa–Mallowsa** pozwalają ocenić zgodność dwóch podziałów zbioru na rozłączne podzbiory. Ponadto, AR uwzględnia prawdopodobieństwo, że dwa algorytmy grupowania zachowując się losowo, równocześnie rozdzielą parę lub dołączą do jednej grupy.
@@ -113,9 +119,11 @@ Następnie funkcja `Mnn_graph` generuje symetryczną macierz sąsiedztwa dla pew
 
 3. **Wyznaczanie laplasjanu i jego wektorów własnych.**
 
-Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe jeszcze nie zostały połączone. Finalnie, wyznaczane są wartości własne wyznaczonego laplasjanu. Wyznacznie ich przy użyciu bazowej funkcji `base::eigen` było bardzo nieefektywne, nawet przy poinformowaniu funkcji o symetryczności macierzy. Zamiast tego wykorzystana została funkcja `RSpectra::eigs_sym`, która wykonywała się znacząco szybciej dla wszystkich zbiorów benchmarkowych.
+Kolejnym etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe jeszcze nie zostały połączone. Finalnie, wyznaczane są wartości własne wyznaczonego laplasjanu. Wyznacznie ich przy użyciu bazowej funkcji `base::eigen` było bardzo nieefektywne, nawet przy poinformowaniu funkcji o symetryczności macierzy. Zamiast tego wykorzystana została funkcja `RSpectra::eigs_sym`, która wykonywała się znacząco szybciej dla wszystkich zbiorów benchmarkowych. Wartym zaznaczenia jest fakt, że to właśnie wyznaczanie wartości własnych jest najbardziej czasochłonnym krokiem algorytmu.
 
 # Indeksy FM i AR dla bazowych algorytmów hierarchicznych
+
+Ogólnie, hierarchiczne algorytmy analizy skupień zwracają rodzinę zagnieżdżonych podziałów taką, że każdy jej element jest sam w sobie poprawnym grupowaniem. Takie metody oferują więc nie tylko wgląd w strukturę zbioru danych, ale także możliwość obserwowania procesu formowania skupień. Jakość algorytmów z bazowego R (`base::hclust`) jest zobrazowana na poniższych wykresach, dla 3 przykładowych zbiorów benchmarkowych.
 
 ```{r echo=FALSE, fig.height=7, fig.align='center'}
     benchmarkSets <- c("cross", "dense", "lsun")
@@ -124,7 +132,7 @@ Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe 
     getPlot <- function(hclustResult, index, benchmarkSets) {
         return(ggplot(hclustResult[[index]], aes(factor(Method), Value, fill = Index)) + 
         geom_bar(stat="identity", position = "dodge") +  
-        ggtitle(paste("Set name", benchmarkSets[index])) +
+        ggtitle(paste(benchmarkSets[index])) +
         scale_fill_brewer(palette = "Set1") + 
         theme(axis.text.x=element_text(angle=20, hjust=1), axis.title.x=element_blank()) +
         geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25, size=2) + ylab("Wartość wskaźnika"))
@@ -137,6 +145,9 @@ Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe 
     grid.arrange(p1, p2, p3, nrow=3)
 ```
 
+Jak widać, średnio bazowe algorytmy hierarchiczne nie dają bardzo dokładnych wyników. Jednak wybierając odpowiednią metodę w zależności od zbioru danych, można uzyskać zadowalającą dokładność. 
+
+
 # Indeksy FM i AR dla algorytmu Genie
 
 ```{r echo=FALSE, fig.height=3.4, fig.align='center'}
@@ -144,9 +155,10 @@ Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe 
     df <- Reduce(rbind, genieResults);
     plotComparedMethod(df, "Genie");
 ```
+Funkcja `hclust2` z pakietu Genie jest hierarchicznym algorytmem analizy skupień opartą na minimalnym drzewie rozpinającym. 
 
 # Indeksy FM i AR dla pakietu protoclust
-Pakiet `protoclust`, dostępny na [CRAN](https://cran.r-project.org/web/packages/protoclust/index.html), udostępnia funkcję `protoclust`, która dokonuje analizy skupień na zadanym zbiorze danych. Zgodnie ze specyfikacją, algorytm osadza przetwarzane punkty w przestrzeni k największych wartości własnych znormlizowanej macierzy podobieństwa.
+Pakiet `protoclust`, dostępny na [CRAN](https://cran.r-project.org/web/packages/protoclust/index.html), udostępnia funkcję `protoclust`, która dokonuje analizy skupień na zadanym zbiorze danych. Zgodnie ze specyfikacją, algorytm jest również algorytmem hierarchicznym.
 
 > Performs minimax linkage hierarchical clustering given a set of dissimilarities.
 
@@ -158,40 +170,24 @@ Poniżej zestawienie wyników działania algorytmu dla przykładowych zbiorów b
     plotComparedMethod(df, "protoclust");
 ```
 
-Jak widać, `protoclust:protoclust` osiąga pełną zgodność z wzorcowymi skupieniami dla niektórych zbiorów (po głębszej analize - zadowalające wyniki dla 26/44 zbiorów). Minusem opisywanego algorytmu jest jego szybkość działania - średnia szybkość wykonania analizy to 7 sekund.
-
 # Indeksy FM i AR dla własnej implementacji algorytmu 
 
 W przypadku autorskiej heurystyki, bardzo istotnym parametrem wpływającym na wynik jest M w algorytmie najbliższych sąsiadów. Poniżej wykresy reprezentujące indeksy dla zbiorów benchmarkowych dla różnych wartości M:
 
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    customResults <- lapply(fileNames, Compare_method, methodName="custom_5");
-    df <- Reduce(rbind, customResults);
-    plotComparedMethod(df, "M = 5");
+    drawComparisonPlot("custom_5", "M = 5")
 ```
-
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    customResults <- lapply(fileNames, Compare_method, methodName="custom_20");
-    df <- Reduce(rbind, customResults);
-    plotComparedMethod(df, "M = 20");
+    drawComparisonPlot("custom_5", "M = 20")
 ```
-
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    customResults <- lapply(fileNames, Compare_method, methodName="custom_100");
-    df <- Reduce(rbind, customResults);
-    plotComparedMethod(df, "M = 100");
+     drawComparisonPlot("custom_5", "M = 100")
 ```
-
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    customResults <- lapply(fileNames, Compare_method, methodName="custom_200");
-    df <- Reduce(rbind, customResults);
-    plotComparedMethod(df, "M = 200");
+    drawComparisonPlot("custom_5", "M = 200")
 ```
-
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    customResults <- lapply(fileNames, Compare_method, methodName="custom_500");
-    df <- Reduce(rbind, customResults);
-    plotComparedMethod(df, "M = 500");
+    drawComparisonPlot("custom_5", "M = 500")
 ```
 
 Analizując średnią sume indeksów FM i AR, można dojść do wniosku, że zwiększanie M w algorytmie najbliższych sąsiadów jedynie pogarsza wyniki heurystyki.

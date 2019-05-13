@@ -55,7 +55,7 @@ Custom_method <- function(data, labels, M) {
 }
 
 set.seed(100);
-mValues <- c(2);
+mValues <- c(5, 20, 100, 200, 500);
 for(i in 1:length(mValues)) {
     Process_method(Custom_method, "custom", mValues[i])
 }
