@@ -23,7 +23,30 @@ Interesujące może się wydawać porównanie dostępnych implementacji i wybran
 
 
 # Własna implementacja analizy skupień
+```r
+function(X, k, M) {
+    S <- Mnn(X, M);
+    G <- Mnn_graph(S);
+    D <- Mnn_graph_D_matrix(G);
+    G <- Mnn_connect_graph(G);
+    E <- Laplacian_eigen(D, G, k);
+    set.seed(100);
+    return(kmeans(E, k));
+}
+```
+Autorska implementacja algorytmu jest pewnego rodzaju heurystyką - na początku ma na celu znormalizowanie danych, a potem zasotowanie bazowego algorytmu k-średnich. Normalizacja jest oparta na trzech najważniejszych krokach:
 
+1. **Wyznaczenie macierzy najbliższych sąsiadów.**
+
+Na początku algorytm wyznacza macierz najbliższych sąsiadów, wywołując `Mnn`. Kod tej funkcji jest napisany w języku C++. Wyznaczanie najbliższych sąsiadów odbywa się z wykorzystaniem `priority_queue` dla lepszej złożoności zamortyzowanej.
+
+2. **Wyznaczenie macierzy sąsiedztwa.**
+
+Następnie funkcja `Mnn_graph` generuje symetryczną macierz sąsiedztwa dla pewnego grafu. Potem, funkcja `Mnn_graph_D_matrix` tworzy macierz diagonalną reprezentującą stopnie w grafie. Po stworzeniu macierzy, wywołanie `Mnn_connect_graph` łączy spójne składowe grafu i zapisuje te zmiany do macierzy sąsziedztwa. Spójne składowe są wyznaczane, przechodząc po grafie algorytmem przeszukiwania w głąb (DFS). Łączone są wierzchołki wyznaczone jako pierwsze dla każdej składowej podczas przeszukiwania.
+
+3. **Wyznaczanie laplasjanu i jego wektorów własnych.**
+
+Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe jeszcze nie zostały połączone. Finalnie, wyznaczane są wartości własne wyznaczonego laplasjanu. Wyznacznie ich przy użyciu bazowej funkcji `base::eigen` było bardzo nieefektywne, nawet przy poinformowaniu funkcji o symetryczności macierzy. Zamiast tego wykorzystana została funkcja `RSpectra::eigs_sym`, która wykonywała się znacząco szybciej dla wszystkich zbiorów benchmarkowych.
 
 # Indeksy FM i AR dla bazowych algorytmów hierarchicznych
 

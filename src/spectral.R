@@ -4,10 +4,11 @@ library(dendextend)
 library(mclust)
 library(ggplot2)
 library(genie)
+library(RSpectra)
 
 Laplacian_eigen <- function(D, G, k) {
     L <- D - G;
-    E <- eigen(L, symmetric=TRUE)$vectors;
+    #E <- eigen(L, symmetric=TRUE)$vectors; too slow :\
     return(E[,(k+1):2]);
 }
 
