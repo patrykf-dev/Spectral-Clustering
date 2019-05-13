@@ -5,7 +5,7 @@ source("spectral.R")
 ###################################################################
 
 Process_method <- function(testMethod, testFolder, testSubFolder = "") {
-    setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
+    setwd("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe");
     files <- list.files();
     
     dataFiles <- files[grepl(pattern = ".data.gz", files)];
@@ -59,13 +59,20 @@ Custom_method <- function(data, labels, M) {
 }
 
 set.seed(100);
-mValues <- c(5);
+mValues <- c(5, 20, 100, 200, 500);
 for(i in 1:length(mValues)) {
     Process_method(Custom_method, "custom", mValues[i])
 }
 
 
-######### 4. KERNLAB
+######### 4. PROTOCLUST
+Protoclust_method <- function(data, labels) {
+    k <- max(labels);
+    protoclustResults <- cutree(protoclust::protoclust(dist(data)), k);
+    return(protoclustResults);
+}
+
+Process_method(Protoclust_method, "protoclust")
 
 ###################################################################
 ####  END OF BENCHMARKING PART  ###################################

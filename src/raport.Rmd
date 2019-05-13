@@ -9,6 +9,70 @@ library(mclust)
 library(ggplot2)
 library(gridExtra)
 set.seed(100)
+    
+setsPath <- "D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe";
+
+    Compare_hclust_methods <- function(fileName) {
+        setwd(setsPath);
+        data <- read.table(paste0(fileName, ".data.gz"));
+        labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
+        k <- max(labels);
+        
+        # Process algorithms
+        resultsFolder <- paste0(setsPath, "/results/hclust_")
+        hCompleteResult <- read.table(paste0(resultsFolder, "complete", "/", fileName, ".csv"));
+        hSingleResult <- read.table(paste0(resultsFolder, "single", "/", fileName, ".csv"));
+        hAverageResult <- read.table(paste0(resultsFolder, "average", "/", fileName, ".csv"));
+        hWardResult <- read.table(paste0(resultsFolder, "ward.D2", "/", fileName, ".csv"));
+        hMcquittyResult <- read.table(paste0(resultsFolder, "mcquitty", "/", fileName, ".csv"));
+        hMedianResult <- read.table(paste0(resultsFolder, "median", "/", fileName, ".csv"));
+        hCentroidResult <- read.table(paste0(resultsFolder, "centroid", "/", fileName, ".csv"));
+         
+        # Find similarity indices
+        dt <- data.frame("Method" = "Complete", "Index" = "FM", "Value" = FM_index(hCompleteResult, labels)[1], stringsAsFactors = FALSE);
+        dt[nrow(dt) + 1,] = list("Complete", "AR", adjustedRandIndex(hCompleteResult, labels));
+        dt[nrow(dt) + 1,] = list("Single", "FM", FM_index(hSingleResult, labels)[1]);
+        dt[nrow(dt) + 1,] = list("Single", "AR", adjustedRandIndex(hSingleResult, labels));
+        dt[nrow(dt) + 1,] = list("Average", "FM", FM_index(hAverageResult, labels)[1]);
+        dt[nrow(dt) + 1,] = list("Average", "AR", adjustedRandIndex(hAverageResult, labels));
+        dt[nrow(dt) + 1,] = list("ward.D2", "FM", FM_index(hWardResult, labels)[1]);
+        dt[nrow(dt) + 1,] = list("ward.D2", "AR", adjustedRandIndex(hWardResult, labels));
+        dt[nrow(dt) + 1,] = list("mcquitty", "FM", FM_index(hMcquittyResult, labels)[1]);
+        dt[nrow(dt) + 1,] = list("mcquitty", "AR", adjustedRandIndex(hMcquittyResult, labels));
+        dt[nrow(dt) + 1,] = list("median", "FM", FM_index(hMedianResult, labels)[1]);
+        dt[nrow(dt) + 1,] = list("median", "AR", adjustedRandIndex(hMedianResult, labels));
+        dt[nrow(dt) + 1,] = list("centroid", "FM", FM_index(hCentroidResult, labels)[1]);
+        dt[nrow(dt) + 1,] = list("centroid", "AR", adjustedRandIndex(hCentroidResult, labels));
+        return(dt);
+    }
+
+
+Compare_method <- function(fileName, methodName) {
+        setwd(setsPath);
+        labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
+        
+        genieResult <- read.table(paste0(setsPath, "/results/", methodName, "/", fileName, ".csv"));
+        
+        dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(genieResult, labels)[1], stringsAsFactors = FALSE);
+        dt[nrow(dt) + 1,] = list(fileName, "AR", abs(adjustedRandIndex(genieResult, labels)));
+        
+        return(dt)
+}
+
+plotComparedMethod <- function(df, title) {
+    ggplot(df, aes(factor(Set.name), Value, fill = Index)) + 
+        geom_bar(stat="identity", position = "dodge") +  
+        scale_fill_brewer(palette = "Set1") + 
+        theme(axis.ticks.x=element_blank(), axis.text.x=element_blank()) +
+        xlab("Zbiór") + ylab("Wartość wskaźnika") +
+        ggtitle(title)
+}
+
+setwd(setsPath);
+fileNames <- list.files()[grepl(pattern = ".data.gz", list.files())];
+    for(i in 1:length(fileNames)) {
+        fileNames[i] <- substr(fileNames[i], 1, nchar(fileNames[i]) - 8);
+    }
 ```
 
 # Wstęp
@@ -51,42 +115,6 @@ Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe 
 # Indeksy FM i AR dla bazowych algorytmów hierarchicznych
 
 ```{r echo=FALSE, fig.height=7, fig.align='center'}
-    Compare_hclust_methods <- function(fileName) {
-        setsPath <- "D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe";
-        setwd(setsPath);
-        data <- read.table(paste0(fileName, ".data.gz"));
-        labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
-        k <- max(labels);
-        
-        # Process algorithms
-        resultsFolder <- paste0(setsPath, "/results/hclust_")
-        hCompleteResult <- read.table(paste0(resultsFolder, "complete", "/", fileName, ".csv"));
-        hSingleResult <- read.table(paste0(resultsFolder, "single", "/", fileName, ".csv"));
-        hAverageResult <- read.table(paste0(resultsFolder, "average", "/", fileName, ".csv"));
-        hWardResult <- read.table(paste0(resultsFolder, "ward.D2", "/", fileName, ".csv"));
-        hMcquittyResult <- read.table(paste0(resultsFolder, "mcquitty", "/", fileName, ".csv"));
-        hMedianResult <- read.table(paste0(resultsFolder, "median", "/", fileName, ".csv"));
-        hCentroidResult <- read.table(paste0(resultsFolder, "centroid", "/", fileName, ".csv"));
-         
-        # Find similarity indices
-        dt <- data.frame("Method" = "Complete", "Index" = "FM", "Value" = FM_index(hCompleteResult, labels)[1], stringsAsFactors = FALSE);
-        dt[nrow(dt) + 1,] = list("Complete", "AR", adjustedRandIndex(hCompleteResult, labels));
-        dt[nrow(dt) + 1,] = list("Single", "FM", FM_index(hSingleResult, labels)[1]);
-        dt[nrow(dt) + 1,] = list("Single", "AR", adjustedRandIndex(hSingleResult, labels));
-        dt[nrow(dt) + 1,] = list("Average", "FM", FM_index(hAverageResult, labels)[1]);
-        dt[nrow(dt) + 1,] = list("Average", "AR", adjustedRandIndex(hAverageResult, labels));
-        dt[nrow(dt) + 1,] = list("ward.D2", "FM", FM_index(hWardResult, labels)[1]);
-        dt[nrow(dt) + 1,] = list("ward.D2", "AR", adjustedRandIndex(hWardResult, labels));
-        dt[nrow(dt) + 1,] = list("mcquitty", "FM", FM_index(hMcquittyResult, labels)[1]);
-        dt[nrow(dt) + 1,] = list("mcquitty", "AR", adjustedRandIndex(hMcquittyResult, labels));
-        dt[nrow(dt) + 1,] = list("median", "FM", FM_index(hMedianResult, labels)[1]);
-        dt[nrow(dt) + 1,] = list("median", "AR", adjustedRandIndex(hMedianResult, labels));
-        dt[nrow(dt) + 1,] = list("centroid", "FM", FM_index(hCentroidResult, labels)[1]);
-        dt[nrow(dt) + 1,] = list("centroid", "AR", adjustedRandIndex(hCentroidResult, labels));
-        return(dt);
-    }
-
-
     benchmarkSets <- c("cross", "dense", "lsun")
     hclustResult <- lapply(benchmarkSets, Compare_hclust_methods)
     
@@ -109,53 +137,54 @@ Ostatnim etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe 
 # Indeksy FM i AR dla algorytmu Genie
 
 ```{r echo=FALSE, fig.height=3.4, fig.align='center'}
-    Compare_genie_method <- function(fileName) {
-        setsPath <- "D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe";
-        setwd(setsPath);
-        labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
-        
-        genieResult <- read.table(paste0(setsPath, "/results/genie/", fileName, ".csv"));
-        
-        dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(genieResult, labels)[1], stringsAsFactors = FALSE);
-        dt[nrow(dt) + 1,] = list(fileName, "AR", adjustedRandIndex(genieResult, labels));
-        
-        return(dt)
-    }
-    
-    benchmarkSets <- c("cross", "dense", "lsun", "spiral", "wingnut", "zigzag");
-    genieResults <- lapply(benchmarkSets, Compare_genie_method);
+    genieResults <- lapply(fileNames, Compare_method, methodName="genie");
     df <- Reduce(rbind, genieResults);
-    ggplot(df, aes(factor(Set.name), Value, fill = Index)) + 
-        geom_bar(stat="identity", position = "dodge") +  
-        scale_fill_brewer(palette = "Set1") + 
-        geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25, size=2) + xlab("Zbiór") + ylab("Wartość wskaźnika")
+    plotComparedMethod(df, "Genie");
 ```
 
-# Indeksy FM i AR dla funkcji specc w pakiecie kernlab
-Pakiet `kernlab`, dostępny na [CRAN](https://www.rdocumentation.org/packages/kernlab/versions/0.9-27), udostępnia funkcję `specc`, która dokonuje analizy skupień na zadanym zbiorze danych. Zgodnie ze specyfikacją, algorytm osadza przetwarzane punkty w przestrzeni k największych wartości własnych znormlizowanej macierzy podobieństwa.
+# Indeksy FM i AR dla pakietu protoclust
+Pakiet `protoclust`, dostępny na [CRAN](https://cran.r-project.org/web/packages/protoclust/index.html), udostępnia funkcję `protoclust`, która dokonuje analizy skupień na zadanym zbiorze danych. Zgodnie ze specyfikacją, algorytm osadza przetwarzane punkty w przestrzeni k największych wartości własnych znormlizowanej macierzy podobieństwa.
 
-> Spectral clustering works by embedding the data points of the partitioning problem into the subspace of the k largest eigenvectors of a normalized affinity/kernel matrix.
+> Performs minimax linkage hierarchical clustering given a set of dissimilarities.
 
 Poniżej zestawienie wyników działania algorytmu dla przykładowych zbiorów benchmarkowych.
 
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    # Wartosci hardcodowane ze wzgledu na dlugi czas przetwarzania
-    kernlabResults <- structure(list(Set.name = c("cross", "cross", "dense", "dense", 
-        "lsun", "lsun", "spiral", "spiral", "wingnut", "wingnut", "zigzag", 
-        "zigzag"), Index = c("FM", "AR", "FM", "AR", "FM", "AR", "FM", 
-        "AR", "FM", "AR", "FM", "AR"), Value = c(0.465340930201732, 0.105087003417032, 
-        0.694993439169809, 0.2603194214965435, 1, 1, 1, 1, 1, 1, 1, 
-        1)), class = "data.frame")
-
-    ggplot(kernlabResults, aes(factor(Set.name), Value, fill = Index)) + 
-        geom_bar(stat="identity", position = "dodge") +  
-        scale_fill_brewer(palette = "Set1") + 
-        geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25, size=2) + xlab("Zbiór") + ylab("Wartość wskaźnika")
+    protoclustResults <- lapply(fileNames, Compare_method, methodName="protoclust");
+    df <- Reduce(rbind, protoclustResults);
+    plotComparedMethod(df, "protoclust");
 ```
 
-Jak widać, `kernlab:specc` osiąga pełną zgodność z wzorcowymi skupieniami dla niektórych zbiorów (po głębszej analize - zadowalające wyniki dla 26/44 zbiorów). Minusem opisywanego algorytmu jest jego szybkość działania - średnia szybkość wykonania analizy to 7 sekund.
+Jak widać, `protoclust:protoclust` osiąga pełną zgodność z wzorcowymi skupieniami dla niektórych zbiorów (po głębszej analize - zadowalające wyniki dla 26/44 zbiorów). Minusem opisywanego algorytmu jest jego szybkość działania - średnia szybkość wykonania analizy to 7 sekund.
 
 # Indeksy FM i AR dla własnej implementacji algorytmu 
+```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
+    customResults <- lapply(fileNames, Compare_method, methodName="custom_5");
+    df <- Reduce(rbind, customResults);
+    plotComparedMethod(df, "M = 5");
+```
 
+```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
+    customResults <- lapply(fileNames, Compare_method, methodName="custom_20");
+    df <- Reduce(rbind, customResults);
+    plotComparedMethod(df, "M = 20");
+```
 
+```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
+    customResults <- lapply(fileNames, Compare_method, methodName="custom_100");
+    df <- Reduce(rbind, customResults);
+    plotComparedMethod(df, "M = 100");
+```
+
+```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
+    customResults <- lapply(fileNames, Compare_method, methodName="custom_200");
+    df <- Reduce(rbind, customResults);
+    plotComparedMethod(df, "M = 200");
+```
+
+```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
+    customResults <- lapply(fileNames, Compare_method, methodName="custom_500");
+    df <- Reduce(rbind, customResults);
+    plotComparedMethod(df, "M = 500");
+```
 # Wnioski
