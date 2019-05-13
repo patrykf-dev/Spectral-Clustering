@@ -31,7 +31,6 @@ IntegerMatrix Mnn(NumericMatrix points, int k)
 	for (int i = 0; i < n; i++)
 	{
 		IntegerVector result = GetNearestNeighbours(points, k, i);
-		//Rcout << "Value for " << i << " is " << result(0) << " " << result(1) << " " << result(2) << endl;
 		rc.row(i) = result;
 	}
 	return rc;
@@ -148,7 +147,6 @@ IntegerMatrix Mnn_graph(IntegerMatrix neighbours)
 				adjacent = 1;
 			else
 				adjacent = 0;
-			//Rcout << "Adjacent flag for [" << i << ", " << j << "] is " << adjacent << endl;
 
 			rc(i, j) = adjacent;
 			rc(j, i) = adjacent;
@@ -185,7 +183,6 @@ IntegerMatrix Mnn_connect_graph(IntegerMatrix graphMatrix)
 	while (it != verticesToConnect.end())
 	{
 		int vertex = *it;
-		Rcout << "(" <<  oneVertex << ", "<< vertex << ") ";
 		graphMatrix(oneVertex, vertex) = 1;
 		graphMatrix(vertex, oneVertex) = 1;
 		it++;
