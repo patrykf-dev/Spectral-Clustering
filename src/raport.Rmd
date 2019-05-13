@@ -60,12 +60,15 @@ Compare_method <- function(fileName, methodName) {
 }
 
 plotComparedMethod <- function(df, title) {
+    meanIndex <- mean(aggregate(df$Value, by=list(df$Set.name), FUN=sum)[[2]]);
+    subtitle <- paste0("avg(FM + AR) = ", toString(round(meanIndex, digits = 4)))
+    
     ggplot(df, aes(factor(Set.name), Value, fill = Index)) + 
         geom_bar(stat="identity", position = "dodge") +  
         scale_fill_brewer(palette = "Set1") + 
         theme(axis.ticks.x=element_blank(), axis.text.x=element_blank()) +
         xlab("Zbiór") + ylab("Wartość wskaźnika") +
-        ggtitle(title)
+        ggtitle(title) + labs(subtitle = subtitle)
 }
 
 setwd(setsPath);
@@ -190,4 +193,8 @@ W przypadku autorskiej heurystyki, bardzo istotnym parametrem wpływającym na w
     df <- Reduce(rbind, customResults);
     plotComparedMethod(df, "M = 500");
 ```
+
+Analizując średnią sume indeksów FM i AR, można dojść do wniosku, że zwiększanie M w algorytmie najbliższych sąsiadów jedynie pogarsza wyniki heurystyki.
+
+
 # Wnioski
