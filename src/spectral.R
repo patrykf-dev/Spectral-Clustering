@@ -8,8 +8,10 @@ library(RSpectra)
 
 Laplacian_eigen <- function(D, G, k) {
     L <- D - G;
-    #E <- eigen(L, symmetric=TRUE)$vectors; too slow :\
-    return(E[,(k+1):2]);
+    L <- apply(L, 1, as.numeric);
+    eigens <- RSpectra::eigs_sym(L, k + 1, which = "SM")$vectors
+    E <- eigens[,(ncol(eigens)-1):1];
+    return(E);
 }
 
 Spectral_clustering_raw <- function(X, k, M) {
