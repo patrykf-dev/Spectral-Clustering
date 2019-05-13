@@ -21,6 +21,10 @@ Analiza skupień jest zadaniem eksploracji i etykietowania danych, które polega
 
 Interesujące może się wydawać porównanie dostępnych implementacji i wybranie tej najlepszej. Czy jest to jednak wybór oczywisty? Czy wydajność i dokładność algorytmów zależy od zbioru danych? W odpowiedzi na te pytania pomogą wskaźniki FM i AR, które jednoznacznie porównają wyniki zwracane przez algorytmy dla zbiorów benchmarkowych z wzorcowymi. Zarówno **skorygowany indeks Randa**, jak i **indeks Fowlkesa–Mallowsa** pozwalają ocenić zgodność dwóch podziałów zbioru na rozłączne podzbiory. Ponadto, AR uwzględnia prawdopodobieństwo, że dwa algorytmy grupowania zachowując się losowo, równocześnie rozdzielą parę lub dołączą do jednej grupy.
 
+
+# Własna implementacja analizy skupień
+
+
 # Indeksy FM i AR dla bazowych algorytmów hierarchicznych
 
 ```{r echo=FALSE, fig.height=7, fig.align='center'}

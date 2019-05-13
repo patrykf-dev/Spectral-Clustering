@@ -55,6 +55,33 @@ ggplot(compared, aes(factor(Method), Value, fill = Index)) +
     geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25, angle = 90, hjust = -0.1)
 
 
+Benchmark_method <- function(testMethod, testFolder) {
+    setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
+    files <- list.files();
+    
+    dataFiles <- files[grepl(pattern = ".data.gz", files)];
+    labelFiles <- files[grepl(pattern = ".labels0.gz", files)];
+    for (i in 1:length(dataFiles)){
+        fileName <- substr(dataFiles[i], 1, nchar(dataFiles[i]) - 8);
+        data <- read.table(paste0(dataFiles[i]));
+        labels <- as.integer(read.table(paste0(labelFiles[i]))[,1]);
+        results <- testMethod(data, labels);
+        write.table(results, paste0("results/", testFolder, "/", fileName, ".csv"), row.names = FALSE, col.names = FALSE)
+    }
+}
+
+
+Benchmark_method(Benchmark_genie_method, "genie")
+
+Benchmark_genie_method <- function(data, labels) {
+    k <- max(labels);
+    genieResults <- cutree(genie::hclust2(objects = as.matrix(data), thresholdGini = 0.5), k);
+    return(genieResults);
+}
+
+Benchmark_genie_method("z1")
+
+
 Benchmark_kernlab_method <- function(fileName) {
     setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
     data <- read.table(paste0(fileName, ".data.gz"));
@@ -99,28 +126,13 @@ Compare_methods <- function(fileName) {
     myResult4 <- Spectral_clustering(data, k, 4, FALSE);
     myResult20 <- Spectral_clustering(data, k, 20, FALSE);
     myResult200 <- Spectral_clustering(data, k, 200, FALSE);
-    hCompleteResult <- cutree(hclust(dist(data), method = "complete"), k);
-    hSingleResult <- cutree(hclust(dist(data), method = "single"), k);
-    hAverageResult <- cutree(hclust(dist(data), method = "average"), k);
     
     # Find similarity indices
     dt <- data.frame("Method" = "Custom M=4", "Index" = "FM", "Value" = FM_index(myResult4, labels)[1], stringsAsFactors = FALSE);
     dt[nrow(dt) + 1,] = list("Custom M=4", "AR", adjustedRandIndex(myResult4, labels));
-    
     dt[nrow(dt) + 1,] = list("Custom M=20", "FM", FM_index(myResult20, labels)[1]);
     dt[nrow(dt) + 1,] = list("Custom M=20", "AR", adjustedRandIndex(myResult20, labels));
-    
     dt[nrow(dt) + 1,] = list("Custom M=200", "FM", FM_index(myResult200, labels)[1]);
     dt[nrow(dt) + 1,] = list("Custom M=200", "AR", adjustedRandIndex(myResult200, labels));
-    
-    dt[nrow(dt) + 1,] = list("hclust Complete", "FM", FM_index(hCompleteResult, labels)[1]);
-    dt[nrow(dt) + 1,] = list("hclust Complete", "AR", adjustedRandIndex(hCompleteResult, labels));
-    
-    dt[nrow(dt) + 1,] = list("hclust Single", "FM", FM_index(hSingleResult, labels)[1]);
-    dt[nrow(dt) + 1,] = list("hclust Single", "AR", adjustedRandIndex(hSingleResult, labels));
-    
-    dt[nrow(dt) + 1,] = list("hclust Average", "FM", FM_index(hAverageResult, labels)[1]);
-    dt[nrow(dt) + 1,] = list("hclust Average", "AR", adjustedRandIndex(hAverageResult, labels));
-    
     return(dt);
 }
