@@ -1,9 +1,5 @@
 source("spectral.R")
 
-###################################################################
-####  BENCHMARKING PART  ##########################################
-###################################################################
-
 Process_method <- function(testMethod, testFolder, testSubFolder = "") {
     setwd("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe");
     files <- list.files();
@@ -73,63 +69,3 @@ Protoclust_method <- function(data, labels) {
 }
 
 Process_method(Protoclust_method, "protoclust")
-
-###################################################################
-####  END OF BENCHMARKING PART  ###################################
-###################################################################
-
-
-Benchmark_kernlab_method <- function(fileName) {
-    setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
-    data <- read.table(paste0(fileName, ".data.gz"));
-    labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
-    k <- max(labels)
-    
-    start_time <- Sys.time()
-    kernlabResult <- kernlab::specc(as.matrix(data), k);
-    end_time <- Sys.time()
-    print(paste("SPECC", (end_time - start_time)))
-    
-    start_time <- Sys.time()
-    unlistedVals <- unclass(kernlabResult)
-    dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(unlistedVals, labels)[1], stringsAsFactors = FALSE);
-    dt[nrow(dt) + 1,] = list(fileName, "AR", adjustedRandIndex(unlistedVals, labels));
-    end_time <- Sys.time()
-    print(paste("INDICES", (end_time - start_time)))
-    
-    return(dt)
-}
-
-benchmarkSets <- c("cross", "dense", "lsun", "spiral", "wingnut", "zigzag")
-kernlabResult <- lapply(benchmarkSets, Benchmark_kernlab_method)
- 
-
-ggplot(df, aes(factor(Set.name), Value, fill = Index)) + 
-    geom_bar(stat="identity", position = "dodge") + 
-    scale_fill_brewer(palette = "Set1") + 
-    geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25) +
-    xlab("Zbiór") + ylab("Wartość wskaźnika")
-
-
-
-Compare_methods <- function(fileName) {
-    setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
-    data <- read.table(paste0(fileName, ".data.gz"));
-    labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
-    k <- max(labels);
-    
-    # Process algorithms
-    # TODO: add finding best k for custom algorithm
-    myResult4 <- Spectral_clustering(data, k, 4, FALSE);
-    myResult20 <- Spectral_clustering(data, k, 20, FALSE);
-    myResult200 <- Spectral_clustering(data, k, 200, FALSE);
-    
-    # Find similarity indices
-    dt <- data.frame("Method" = "Custom M=4", "Index" = "FM", "Value" = FM_index(myResult4, labels)[1], stringsAsFactors = FALSE);
-    dt[nrow(dt) + 1,] = list("Custom M=4", "AR", adjustedRandIndex(myResult4, labels));
-    dt[nrow(dt) + 1,] = list("Custom M=20", "FM", FM_index(myResult20, labels)[1]);
-    dt[nrow(dt) + 1,] = list("Custom M=20", "AR", adjustedRandIndex(myResult20, labels));
-    dt[nrow(dt) + 1,] = list("Custom M=200", "FM", FM_index(myResult200, labels)[1]);
-    dt[nrow(dt) + 1,] = list("Custom M=200", "AR", adjustedRandIndex(myResult200, labels));
-    return(dt);
-}

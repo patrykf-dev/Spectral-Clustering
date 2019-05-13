@@ -158,6 +158,9 @@ Poniżej zestawienie wyników działania algorytmu dla przykładowych zbiorów b
 Jak widać, `protoclust:protoclust` osiąga pełną zgodność z wzorcowymi skupieniami dla niektórych zbiorów (po głębszej analize - zadowalające wyniki dla 26/44 zbiorów). Minusem opisywanego algorytmu jest jego szybkość działania - średnia szybkość wykonania analizy to 7 sekund.
 
 # Indeksy FM i AR dla własnej implementacji algorytmu 
+
+W przypadku autorskiej heurystyki, bardzo istotnym parametrem wpływającym na wynik jest M w algorytmie najbliższych sąsiadów. Poniżej wykresy reprezentujące indeksy dla zbiorów benchmarkowych dla różnych wartości M:
+
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
     customResults <- lapply(fileNames, Compare_method, methodName="custom_5");
     df <- Reduce(rbind, customResults);
