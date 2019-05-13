@@ -55,7 +55,11 @@ ggplot(compared, aes(factor(Method), Value, fill = Index)) +
     geom_text(aes(label = round(Value, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25, angle = 90, hjust = -0.1)
 
 
-Benchmark_method <- function(testMethod, testFolder) {
+###################################################################
+####  BENCHMARKING PART  ##########################################
+###################################################################
+
+Benchmark_method <- function(testMethod, testFolder, testSubFolder = "") {
     setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
     files <- list.files();
     
@@ -65,13 +69,25 @@ Benchmark_method <- function(testMethod, testFolder) {
         fileName <- substr(dataFiles[i], 1, nchar(dataFiles[i]) - 8);
         data <- read.table(paste0(dataFiles[i]));
         labels <- as.integer(read.table(paste0(labelFiles[i]))[,1]);
-        results <- testMethod(data, labels);
-        write.table(results, paste0("results/", testFolder, "/", fileName, ".csv"), row.names = FALSE, col.names = FALSE)
+        
+        print(paste0("PROCESSING FILE: ", i, " / ", length(dataFiles), " -> ", (i * 100 / length(dataFiles)), "%"))
+        
+        results <- testMethod(data, labels, testSubFolder);
+        if(testSubFolder == ""){
+            path <- paste0("results/", toString(testFolder), "/", fileName, ".csv");
+        } else {
+            path <- paste0("results/", toString(testFolder), "_", testSubFolder, "/", fileName, ".csv");
+        }
+        
+        write.table(t(results), path, row.names = FALSE, col.names = FALSE);
     }
 }
 
-
-Benchmark_method(Benchmark_genie_method, "genie")
+Benchmark_hclust_method <- function(data, labels, method) {
+    k <- max(labels);
+    hclustResults <- cutree(hclust(dist(data), method = method), k);
+    return(hclustResults);
+}
 
 Benchmark_genie_method <- function(data, labels) {
     k <- max(labels);
@@ -79,7 +95,31 @@ Benchmark_genie_method <- function(data, labels) {
     return(genieResults);
 }
 
-Benchmark_genie_method("z1")
+Benchmark_custom_method <- function(data, labels, M) {
+    k <- max(labels);
+    customResults<- Spectral_clustering(data, k, M, FALSE);
+}
+
+
+# CALLS
+Benchmark_method(Benchmark_genie_method, "genie")
+
+hclustMethods <- c("complete", "single", "average", "ward.D2", "mcquitty", "median", "centroid");
+for(i in 1:length(hclustMethods)) {
+    Benchmark_method(Benchmark_hclust_method, "hclust", hclustMethods[i])
+}
+
+
+set.seed(100);
+mValues <- c(5);
+for(i in 1:length(mValues)) {
+    Benchmark_method(Benchmark_custom_method, "custom", mValues[i])
+}
+
+
+###################################################################
+####  END OF BENCHMARKING PART  ###################################
+###################################################################
 
 
 Benchmark_kernlab_method <- function(fileName) {

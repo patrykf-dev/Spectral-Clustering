@@ -29,42 +29,37 @@ Interesujące może się wydawać porównanie dostępnych implementacji i wybran
 
 ```{r echo=FALSE, fig.height=7, fig.align='center'}
     Compare_hclust_methods <- function(fileName) {
-        setwd(paste0("D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe"));
+        setsPath <- "D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe";
+        setwd(setsPath);
         data <- read.table(paste0(fileName, ".data.gz"));
         labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
         k <- max(labels);
         
         # Process algorithms
-        hCompleteResult <- cutree(hclust(dist(data), method = "complete"), k);
-        hSingleResult <- cutree(hclust(dist(data), method = "single"), k);
-        hAverageResult <- cutree(hclust(dist(data), method = "average"), k);
-        hWardResult <- cutree(hclust(dist(data), method = "ward.D2"), k);
-        hMcquittyResult <- cutree(hclust(dist(data), method = "mcquitty"), k);
-        hMedianResult <- cutree(hclust(dist(data), method = "median"), k);
-        hCentroidResult <- cutree(hclust(dist(data), method = "centroid"), k);
-        
+        resultsFolder <- paste0(setsPath, "/results/hclust_")
+        hCompleteResult <- read.table(paste0(resultsFolder, "complete", "/", fileName, ".csv"));
+        hSingleResult <- read.table(paste0(resultsFolder, "single", "/", fileName, ".csv"));
+        hAverageResult <- read.table(paste0(resultsFolder, "average", "/", fileName, ".csv"));
+        hWardResult <- read.table(paste0(resultsFolder, "ward.D2", "/", fileName, ".csv"));
+        hMcquittyResult <- read.table(paste0(resultsFolder, "mcquitty", "/", fileName, ".csv"));
+        hMedianResult <- read.table(paste0(resultsFolder, "median", "/", fileName, ".csv"));
+        hCentroidResult <- read.table(paste0(resultsFolder, "centroid", "/", fileName, ".csv"));
+         
         # Find similarity indices
         dt <- data.frame("Method" = "Complete", "Index" = "FM", "Value" = FM_index(hCompleteResult, labels)[1], stringsAsFactors = FALSE);
         dt[nrow(dt) + 1,] = list("Complete", "AR", adjustedRandIndex(hCompleteResult, labels));
-        
         dt[nrow(dt) + 1,] = list("Single", "FM", FM_index(hSingleResult, labels)[1]);
         dt[nrow(dt) + 1,] = list("Single", "AR", adjustedRandIndex(hSingleResult, labels));
-        
         dt[nrow(dt) + 1,] = list("Average", "FM", FM_index(hAverageResult, labels)[1]);
         dt[nrow(dt) + 1,] = list("Average", "AR", adjustedRandIndex(hAverageResult, labels));
-        
         dt[nrow(dt) + 1,] = list("ward.D2", "FM", FM_index(hWardResult, labels)[1]);
         dt[nrow(dt) + 1,] = list("ward.D2", "AR", adjustedRandIndex(hWardResult, labels));
-        
         dt[nrow(dt) + 1,] = list("mcquitty", "FM", FM_index(hMcquittyResult, labels)[1]);
         dt[nrow(dt) + 1,] = list("mcquitty", "AR", adjustedRandIndex(hMcquittyResult, labels));
-        
         dt[nrow(dt) + 1,] = list("median", "FM", FM_index(hMedianResult, labels)[1]);
         dt[nrow(dt) + 1,] = list("median", "AR", adjustedRandIndex(hMedianResult, labels));
-        
         dt[nrow(dt) + 1,] = list("centroid", "FM", FM_index(hCentroidResult, labels)[1]);
         dt[nrow(dt) + 1,] = list("centroid", "AR", adjustedRandIndex(hCentroidResult, labels));
-        
         return(dt);
     }
 

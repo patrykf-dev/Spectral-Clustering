@@ -3,6 +3,7 @@ Rcpp::sourceCpp("spectral_aux.cpp", verbose=TRUE, rebuild=TRUE)
 library(dendextend)
 library(mclust)
 library(ggplot2)
+library(genie)
 
 Laplacian_eigen <- function(D, G, k) {
     L <- D - G;
