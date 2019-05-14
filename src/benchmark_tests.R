@@ -69,39 +69,3 @@ Protoclust_method <- function(data, labels) {
 }
 
 Process_method(Protoclust_method, "protoclust")
-
-
-
-
-
-
-
-
-
-##################################################
-
-
-
-setsPath <- "D:/Studia/_PrzetwarzanieDanych/praca_domowa2/zbiory-benchmarkowe";
-
-Compare_method <- function(fileName, methodName) {
-    setwd(setsPath);
-    labels <- as.integer(read.table(paste0(fileName, ".labels0.gz"))[,1]);
-    
-    genieResult <- read.table(paste0(setsPath, "/results/", methodName, "/", fileName, ".csv"));
-    
-    dt <- data.frame("Set name" = fileName, "Index" = "FM", "Value" = FM_index(genieResult, labels)[1], stringsAsFactors = FALSE);
-    dt[nrow(dt) + 1,] = list(fileName, "AR", abs(adjustedRandIndex(genieResult, labels)));
-    
-    return(dt)
-}
-
-fileNames <- list.files()[grepl(pattern = ".data.gz", list.files())];
-for(i in 1:length(fileNames)) {
-    fileNames[i] <- substr(fileNames[i], 1, nchar(fileNames[i]) - 8);
-}
-
-
-customResults <- lapply(fileNames, Compare_method, methodName="custom_20");
-df <- Reduce(rbind, customResults);
-

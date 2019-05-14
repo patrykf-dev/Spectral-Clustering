@@ -121,6 +121,8 @@ Następnie funkcja `Mnn_graph` generuje symetryczną macierz sąsiedztwa dla pew
 
 Kolejnym etapem algorytmu jest wyznaczenie laplasjanu grafu, którego składowe jeszcze nie zostały połączone. Finalnie, wyznaczane są wartości własne wyznaczonego laplasjanu. Wyznacznie ich przy użyciu bazowej funkcji `base::eigen` było bardzo nieefektywne, nawet przy poinformowaniu funkcji o symetryczności macierzy. Zamiast tego wykorzystana została funkcja `RSpectra::eigs_sym`, która wykonywała się znacząco szybciej dla wszystkich zbiorów benchmarkowych. Wartym zaznaczenia jest fakt, że to właśnie wyznaczanie wartości własnych jest najbardziej czasochłonnym krokiem algorytmu.
 
+\newpage
+
 # Indeksy FM i AR dla bazowych algorytmów hierarchicznych
 
 Ogólnie, hierarchiczne algorytmy analizy skupień zwracają rodzinę zagnieżdżonych podziałów taką, że każdy jej element jest sam w sobie poprawnym grupowaniem. Takie metody oferują więc nie tylko wgląd w strukturę zbioru danych, ale także możliwość obserwowania procesu formowania skupień. Jakość algorytmów z bazowego R (`base::hclust`) jest zobrazowana na poniższych wykresach, dla 3 przykładowych zbiorów benchmarkowych.
@@ -147,28 +149,31 @@ Ogólnie, hierarchiczne algorytmy analizy skupień zwracają rodzinę zagnieżd�
 
 Jak widać, średnio bazowe algorytmy hierarchiczne nie dają bardzo dokładnych wyników. Jednak wybierając odpowiednią metodę w zależności od zbioru danych, można uzyskać zadowalającą dokładność. 
 
+\newpage
 
 # Indeksy FM i AR dla algorytmu Genie
 
 ```{r echo=FALSE, fig.height=3.4, fig.align='center'}
-    genieResults <- lapply(fileNames, Compare_method, methodName="genie");
-    df <- Reduce(rbind, genieResults);
-    plotComparedMethod(df, "Genie");
+    drawComparisonPlot("genie", "Genie");
 ```
-Funkcja `hclust2` z pakietu Genie jest hierarchicznym algorytmem analizy skupień opartą na minimalnym drzewie rozpinającym. 
+Funkcja `hclust2` z pakietu Genie jest hierarchicznym algorytmem analizy skupień opartą na minimalnym drzewie rozpinającym. Algorytm wypadł najlepiej zarówno czasowo, jak i ze względu na dokładność działania. Szybkość algorytmu ma swoje uzasadnienie w zrównolegleniu i wprowadzeniu nowego kryterium łączenia. Złożoność czasowa to $O(n^2)$, a pamięciowa - $O(n)$.
+
+\newpage
 
 # Indeksy FM i AR dla pakietu protoclust
 Pakiet `protoclust`, dostępny na [CRAN](https://cran.r-project.org/web/packages/protoclust/index.html), udostępnia funkcję `protoclust`, która dokonuje analizy skupień na zadanym zbiorze danych. Zgodnie ze specyfikacją, algorytm jest również algorytmem hierarchicznym.
 
-> Performs minimax linkage hierarchical clustering given a set of dissimilarities.
+> Performs minimax linkage hierarchical clustering given a set of dissimilarities. Consider two clusters G and H and their union U. The minimax linkage between G and H is defined to be the radius of the smallest ball that encloses all of U and that is centered at one of the points in U.
+
+Algorytm został zaimplementowany w 2011 przez Jacob Bien i Robert Tibshirani. Bazuje on na opisie algorytmu z "A Survey of Recent Advances in Hierarchical Clustering Algorithms" - publikacji z 1983 roku. Ta implementacja, podobnie do autorskiej, wykorzystuje algorytm najbliższych sąsiadów.
 
 Poniżej zestawienie wyników działania algorytmu dla przykładowych zbiorów benchmarkowych.
 
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    protoclustResults <- lapply(fileNames, Compare_method, methodName="protoclust");
-    df <- Reduce(rbind, protoclustResults);
-    plotComparedMethod(df, "protoclust");
+    drawComparisonPlot("protoclust", "protoclust");
 ```
+
+\newpage
 
 # Indeksy FM i AR dla własnej implementacji algorytmu 
 
@@ -178,19 +183,16 @@ W przypadku autorskiej heurystyki, bardzo istotnym parametrem wpływającym na w
     drawComparisonPlot("custom_5", "M = 5")
 ```
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    drawComparisonPlot("custom_5", "M = 20")
+    drawComparisonPlot("custom_20", "M = 20")
 ```
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-     drawComparisonPlot("custom_5", "M = 100")
+     drawComparisonPlot("custom_100", "M = 100")
 ```
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    drawComparisonPlot("custom_5", "M = 200")
+    drawComparisonPlot("custom_200", "M = 200")
 ```
 ```{r fig.width=6, fig.height=3.4, echo=FALSE, fig.align='center'}
-    drawComparisonPlot("custom_5", "M = 500")
+    drawComparisonPlot("custom_500", "M = 500")
 ```
 
 Analizując średnią sume indeksów FM i AR, można dojść do wniosku, że zwiększanie M w algorytmie najbliższych sąsiadów jedynie pogarsza wyniki heurystyki.
-
-
-# Wnioski
